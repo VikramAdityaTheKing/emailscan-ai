@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmailScan AI - Outlook Digest</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        #login-section {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        #login-section button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #login-section button:hover {
+            transform: translateY(-2px);
+        }
+
+        #digest-section {
+            display: none;
+        }
+
+        .digest-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .digest-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .digest-title {
+            font-size: 1.8rem;
+            color: #333;
+        }
+
+        .signout-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid #667eea;
+            padding: 6px 14px;
+            border-radius: 6px;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .signout-link:hover {
+            background: #f0f0ff;
+        }
+
+        /* Link Risk Analyzer */
+        .link-analyzer {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .link-analyzer-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .powered-by {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #888;
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+
+        .link-analyzer-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #link-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 0.95rem;
+        }
+
+        .link-analyzer-row button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+
+        .link-analyzer-row button:hover {
+            opacity: 0.9;
+        }
+
+        #link-analysis-result {
+            margin-top: 12px;
+        }
+
+        .link-analysis-output {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 14px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+            max-height: 350px; /* Fix: Added max-height */
+            overflow-y: auto;  /* Fix: Added scrollbar */
+        }
+
+        .link-analysis-summary {
+            border-radius: 6px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .link-analysis-summary p {
+            margin: 6px 0 0;
+            font-weight: normal;
+        }
+
+        .link-analysis-summary.verdict-safe {
+            background: #e6f4ea;
+            border: 1px solid #b7dfc3;
+            color: #1e7e34;
+        }
+
+        .link-analysis-summary.verdict-suspicious {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            color: #8a6d00;
+        }
+
+        .link-analysis-summary.verdict-phishing {
+            background: #fde8e8;
+            border: 1px solid #f5c2c2;
+            color: #c0392b;
+        }
+
+        .link-analysis-summary.verdict-unknown {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #555;
+        }
+
+        .link-analysis-details summary {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        /* Controls bar (time range + rescan) */
+        .controls-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls-bar label {
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .controls-bar select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 0.9rem;
+            background: white;
+            color: #333;
+        }
+
+        .rescan-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .rescan-btn:hover {
+            background: #5563c1;
+        }
+
+        /* Summary cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .summary-card.active {
+            border-color: #333;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        }
+
+        .card-phishing {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-suspicious {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .card-subscriptions {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .card-priority {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            color: #333;
+        }
+
+        .card-normal {
+            background: linear-gradient(135deg, #c7c5c1 0%, #a8a89e 100%);
+        }
+
+        .card-folder {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: #333;
+        }
+
+        .card-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .filter-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            min-height: 36px;
+        }
+
+        .reset-filter-btn {
+            display: none;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .reset-filter-btn:hover {
+            background: #5563c1;
+        }
+
+        .reset-filter-btn.visible {
+            display: inline-block;
+        }
+
+        /* Accordion sections */
+        .email-section {
+            margin-bottom: 10px;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px 0;
+            border-bottom: 2px solid #ddd;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .section-header:hover {
+            color: #667eea;
+        }
+
+        .toggle-icon {
+            font-size: 0.8rem;
+            display: inline-block;
+            width: 16px;
+        }
+
+        .section-title-text {
+            font-size: 1.3rem;
+            color: #333;
+            transition: color 0.2s;
+        }
+
+        .section-header:hover .section-title-text {
+            color: #667eea;
+        }
+
+        .section-body {
+            padding-top: 15px;
+        }
+
+        .section-body.collapsed {
+            display: none;
+        }
+
+        .email-item {
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .email-item.phishing {
+            border-left-color: #f5576c;
+            background: #ffe0e0;
+        }
+
+        .email-item.suspicious {
+            border-left-color: #fa709a;
+            background: #fff5e0;
+        }
+
+        .email-from {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .email-subject {
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .email-indicators {
+            font-size: 0.85rem;
+            color: #d9534f;
+            margin-top: 8px;
+        }
+
+        .indicator-tag {
+            display: inline-block;
+            background: #d9534f;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-top: 5px;
+            font-size: 0.75rem;
+        }
+
+        .empty-category {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.1rem;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Email actions: checkbox, open link, detected link */
+        .email-header-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .email-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .email-header-row .email-from {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .open-email-link {
+            font-size: 0.8rem;
+            color: #667eea;
+            text-decoration: none;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .open-email-link:hover {
+            text-decoration: underline;
+        }
+
+        .detected-link-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 0.85rem;
+            flex-wrap: wrap;
+        }
+
+        .detected-link-box code {
+            background: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            word-break: break-all;
+        }
+
+        .detected-link-box button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .detected-link-box button:hover {
+            opacity: 0.9;
+        }
+
+        /* Bulk actions toolbar */
+        .bulk-actions-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            padding: 10px 0;
+        }
+
+        .bulk-actions-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .bulk-actions-bar button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .bulk-actions-bar button:hover:not(:disabled) {
+            background: #5563c1;
+        }
+
+        .bulk-actions-bar button.coming-soon {
+            background: #ddd;
+            color: #888;
+            cursor: not-allowed;
+        }
+
+        .bulk-actions-hint {
+            flex-basis: 100%;
+            font-size: 0.8rem;
+            color: #777;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 EmailScan AI</h1>
+            <p>Intelligent Outlook Email Digest & Security Analysis</p>
+        </div>
+
+        <div id="login-section">
+            <h2>Connect Your Outlook Account</h2>
+            <p style="margin: 20px 0; color: #666;">Click below to authenticate with Microsoft Outlook and see your email digest</p>
+            <button onclick="startLogin()">🔐 Login with Outlook</button>
+        </div>
+
+        <div id="digest-section">
+            <div class="digest-container">
+                <div class="digest-header">
+                    <div class="digest-title">Your Email Digest</div>
+                    <a href="/auth/logout" class="signout-link">Switch Account / Sign Out</a>
+                </div>
+
+                <div class="link-analyzer">
+                    <div class="link-analyzer-title">🔍 Link Risk Analyzer<span class="powered-by">Powered by Phi-4</span></div>
+                    <div class="link-analyzer-row">
+                        <input type="text" id="link-input" placeholder="Paste a suspicious link here to analyze...">
+                        <button onclick="analyzeLinkWithPhi4()">Analyze with Phi-4</button>
+                    </div>
+                    <div id="link-analysis-result"></div>
+                </div>
+
+                <div class="controls-bar">
+                    <label for="time-range">Time range:</label>
+                    <select id="time-range" onchange="loadDigest()">
+                        <option value="all">Recent (default)</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="lastweek">Last Week</option>
+                        <option value="month">Last Month</option>
+                    </select>
+                    <button class="rescan-btn" onclick="loadDigest()">🔄 Rescan</button>
+                </div>
+
+                <div id="summary-cards" class="summary-cards"></div>
+                <div class="filter-bar">
+                    <button class="reset-filter-btn" id="reset-filter-btn" onclick="showAllCategories()">← Show all categories</button>
+                </div>
+                <div id="bulk-actions-bar" class="bulk-actions-bar" style="display:none;">
+                    <span class="bulk-actions-label" id="bulk-actions-label">0 selected</span>
+                    <button onclick="bulkAction('open')">Open Selected in Outlook ↗</button>
+                    <button onclick="bulkAction('report')">🚩 Report Selected</button>
+                    <button onclick="bulkAction('delete')">🗑️ Delete Selected</button>
+                    <button id="unsubscribe-btn" onclick="bulkAction('unsubscribe')">✉️ Unsubscribe Selected</button>
+                    <div id="bulk-actions-hint" class="bulk-actions-hint"></div>
+                </div>
+                <div id="email-categories"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function startLogin() {
+            try {
+                const response = await fetch('/auth/login');
+                const data = await response.json();
+                window.location.href = data.auth_url;
+            } catch (error) {
+                alert('Failed to start login: ' + error.message);
+            }
+        }
+
+        async function loadDigest() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('digest-section').style.display = 'block';
+
+            const container = document.getElementById('email-categories');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading your email digest...</div>';
+
+            const rangeSelect = document.getElementById('time-range');
+            const range = rangeSelect ? rangeSelect.value : 'all';
+
+            try {
+                const response = await fetch(`/api/digest?limit=20&range=${range}`)
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                const data = await response.json();
+                renderDigest(data);
+            } catch (error) {
+                container.innerHTML = '<div class="loading" style="color: red;">Error loading digest: ' + error.message + '</div>';
+            }
+        }
+
+        const SECTION_DEFS = [
+            { key: 'phishing_risk', title: '🚨 Phishing Risk', type: 'phishing', cardClass: 'card-phishing', label: 'Phishing Risk' },
+            { key: 'suspicious', title: '⚠️ Suspicious', type: 'suspicious', cardClass: 'card-suspicious', label: 'Suspicious' },
+            { key: 'subscriptions', title: '📬 Subscriptions & Promotions', type: '', cardClass: 'card-subscriptions', label: 'Subscriptions' },
+            { key: 'priority', title: '⭐ Priority', type: '', cardClass: 'card-priority', label: 'Priority' },
+            { key: 'normal', title: '📧 Normal', type: '', cardClass: 'card-normal', label: 'Normal' },
+            { key: 'folder_check', title: '📁 Folder Placement Check', type: '', cardClass: 'card-folder', label: 'Folder Check' }
+        ];
+
+        function renderDigest(data) {
+            const summaryCards = document.getElementById('summary-cards');
+            const categories = document.getElementById('email-categories');
+            const counts = data.digest.counts;
+
+            const folderCheck = data.folder_check || { inbox_risky: [], junk_legit: [], inbox_risky_count: 0, junk_legit_count: 0 };
+            const folderCheckCount = (folderCheck.inbox_risky_count || 0) + (folderCheck.junk_legit_count || 0);
+
+            const allCounts = Object.assign({}, counts, { folder_check: folderCheckCount });
+
+            document.getElementById('reset-filter-btn').classList.remove('visible');
+
+            const bulkBar = document.getElementById('bulk-actions-bar');
+            if (bulkBar) bulkBar.style.display = 'none';
+
+            const bulkHint = document.getElementById('bulk-actions-hint');
+            if (bulkHint) bulkHint.textContent = '';
+
+            const unsubBtn = document.getElementById('unsubscribe-btn');
+            if (unsubBtn) {
+                unsubBtn.disabled = false;
+                unsubBtn.classList.remove('coming-soon');
+            }
+
+            summaryCards.innerHTML = SECTION_DEFS.map(sec => `
+                <div class="summary-card ${sec.cardClass}" data-category="${sec.key}" onclick="filterCategory('${sec.key}')">
+                    <div class="card-number">${allCounts[sec.key]}</div>
+                    <div class="card-label">${sec.label}</div>
+                </div>
+            `).join('');
+
+            let html = '';
+
+            SECTION_DEFS.forEach(sec => {
+                const count = allCounts[sec.key];
+                if (count === 0) return;
+
+                if (sec.key === 'folder_check') {
+                    html += renderFolderCheckSection(folderCheck, count);
+                } else {
+                    const items = data.digest.categories[sec.key];
+                    html += renderCategorySection(sec, items, count);
+                }
+            });
+
+            html += `<div class="empty-category" id="empty-category-msg" style="display:none;"></div>`;
+
+            categories.innerHTML = html;
+        }
+
+        function renderCategorySection(sec, items, count) {
+            return `<div class="email-section" data-category="${sec.key}" id="section-${sec.key}">
+                <div class="section-header" onclick="toggleSection('${sec.key}')">
+                    <span class="toggle-icon" id="icon-${sec.key}">▶</span>
+                    <span class="section-title-text">${sec.title} (${count})</span>
+                </div>
+                <div class="section-body collapsed" id="body-${sec.key}">
+                    ${items.map(e => renderEmail(e, sec.type)).join('')}
+                </div>
+            </div>`;
+        }
+
+        function renderFolderCheckSection(folderCheck, totalCount) {
+            const inboxRisky = folderCheck.inbox_risky || [];
+            const junkLegit = folderCheck.junk_legit || [];
+
+            let body = '';
+            if (inboxRisky.length > 0) {
+                body += `<p style="margin: 0 0 10px; color: #555;"><strong>${inboxRisky.length}</strong> risky email(s) sitting in your Inbox that Outlook's filter didn't catch:</p>`;
+                body += inboxRisky.map(e => renderEmail(e, e.category === 'PHISHING_RISK' ? 'phishing' : 'suspicious')).join('');
+            }
+            if (junkLegit.length > 0) {
+                body += `<p style="margin: 15px 0 10px; color: #555;"><strong>${junkLegit.length}</strong> email(s) in Junk that look legitimate — may be worth checking:</p>`;
+                body += junkLegit.map(e => renderEmail(e)).join('');
+            }
+
+            return `<div class="email-section" data-category="folder_check" id="section-folder_check">
+                <div class="section-header" onclick="toggleSection('folder_check')">
+                    <span class="toggle-icon" id="icon-folder_check">▶</span>
+                    <span class="section-title-text">📁 Folder Placement Check (${totalCount})</span>
+                </div>
+                <div class="section-body collapsed" id="body-folder_check">
+                    ${body}
+                </div>
+            </div>`;
+        }
+
+        function toggleSection(key) {
+            const body = document.getElementById(`body-${key}`);
+            const icon = document.getElementById(`icon-${key}`);
+            const isCollapsed = body.classList.contains('collapsed');
+            body.classList.toggle('collapsed');
+            icon.textContent = isCollapsed ? '▼' : '▶';
+        }
+
+        function filterCategory(key) {
+            const sections = document.querySelectorAll('.email-section');
+            const cards = document.querySelectorAll('.summary-card');
+            const resetBtn = document.getElementById('reset-filter-btn');
+            const emptyMsg = document.getElementById('empty-category-msg');
+
+            let found = false;
+            sections.forEach(sec => {
+                if (sec.dataset.category === key) {
+                    sec.style.display = 'block';
+                    found = true;
+                    const body = document.getElementById(`body-${key}`);
+                    const icon = document.getElementById(`icon-${key}`);
+                    if (body && body.classList.contains('collapsed')) {
+                        body.classList.remove('collapsed');
+                        icon.textContent = '▼';
+                    }
+                } else {
+                    sec.style.display = 'none';
+                }
+            });
+
+            cards.forEach(card => {
+                card.classList.toggle('active', card.dataset.category === key);
+            });
+
+            resetBtn.classList.add('visible');
+
+            if (!found) {
+                const def = SECTION_DEFS.find(s => s.key === key);
+                const label = def ? def.label : 'this category';
+                emptyMsg.textContent = `No emails in ${label} right now — looking good. ✅`;
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+            }
+        }
+
+        function showAllCategories() {
+            const sections = document.querySelectorAll('.email-section');
+            const cards = document.querySelectorAll('.summary-card');
+            const resetBtn = document.getElementById('reset-filter-btn');
+            const emptyMsg = document.getElementById('empty-category-msg');
+
+            sections.forEach(sec => sec.style.display = 'block');
+            cards.forEach(card => card.classList.remove('active'));
+            resetBtn.classList.remove('visible');
+            emptyMsg.style.display = 'none';
+        }
+
+        function renderEmail(email, type = '') {
+            const indicators = email.indicators && email.indicators.length > 0
+                ? `<div class="email-indicators">${email.indicators.map(i => `<span class="indicator-tag">${i}</span>`).join('')}</div>`
+                : '';
+
+            const emailId = email.email_id || '';
+            const webLink = email.web_link || '';
+
+            const openLink = webLink
+                ? `<a href="${escapeHtml(webLink)}" target="_blank" class="open-email-link">Open in Outlook ↗</a>`
+                : '';
+
+            const linkBox = email.detected_link
+                ? `<div class="detected-link-box">
+                    <span>🔗 Suspicious link detected: <code>${escapeHtml(email.detected_link)}</code></span>
+                    <button onclick="testDetectedLink(this)" data-link="${escapeHtml(email.detected_link)}">Test with Phi-4</button>
+                </div>`
+                : '';
+
+            return `<div class="email-item ${type}">
+                <div class="email-header-row">
+                    <input type="checkbox" class="email-checkbox" data-email-id="${emailId}" data-web-link="${escapeHtml(webLink)}" data-unsubscribe-url="${escapeHtml(email.unsubscribe_url || '')}" data-one-click="${email.unsubscribe_one_click ? '1' : '0'}" onchange="updateBulkBar()">
+                    <div class="email-from">From: ${email.from_name || email.from}</div>
+                    ${openLink}
+                </div>
+                <div class="email-subject">Subject: ${email.subject}</div>
+                ${indicators}
+                ${linkBox}
+            </div>`;
+        }
+
+        function testDetectedLink(btn) {
+            const url = btn.getAttribute('data-link');
+            const input = document.getElementById('link-input');
+            input.value = url;
+            document.querySelector('.link-analyzer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            analyzeLinkWithPhi4();
+        }
+
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.email-checkbox:checked');
+            const bar = document.getElementById('bulk-actions-bar');
+            const label = document.getElementById('bulk-actions-label');
+            const hint = document.getElementById('bulk-actions-hint');
+            const unsubBtn = document.getElementById('unsubscribe-btn');
+
+            if (checked.length === 0) {
+                bar.style.display = 'none';
+                hint.textContent = '';
+                return;
+            }
+
+            bar.style.display = 'flex';
+            label.textContent = `${checked.length} selected`;
+
+            const eligible = Array.from(checked).filter(cb => cb.dataset.unsubscribeUrl);
+
+            if (eligible.length === 0) {
+                unsubBtn.disabled = true;
+                unsubBtn.classList.add('coming-soon');
+                hint.textContent = '✉️ Unsubscribe: not available for the current selection — flagged senders (Phishing Risk / Suspicious) and emails without a List-Unsubscribe header are never acted on.';
+            } else {
+                unsubBtn.disabled = false;
+                unsubBtn.classList.remove('coming-soon');
+                if (eligible.length === checked.length) {
+                    hint.textContent = '✉️ Unsubscribe: will use the List-Unsubscribe header (RFC 8058 one-click where supported) for the selected email(s).';
+                } else {
+                    hint.textContent = `✉️ Unsubscribe: ${eligible.length} of ${checked.length} selected are eligible — the rest will be skipped (flagged or no unsubscribe header).`;
+                }
+            }
+        }
+
+        async function bulkAction(action) {
+            const checked = document.querySelectorAll('.email-checkbox:checked');
+            if (checked.length === 0) return;
+
+            if (action === 'open') {
+                checked.forEach(cb => {
+                    const link = cb.dataset.webLink;
+                    if (link) window.open(link, '_blank');
+                });
+                return;
+            }
+
+            if (action === 'report' || action === 'delete') {
+                if (action === 'delete') {
+                    const ok = confirm(`Move ${checked.length} email(s) to Deleted Items? You can recover them from Deleted Items in Outlook if needed.`);
+                    if (!ok) return;
+                }
+
+                const ids = Array.from(checked).map(cb => cb.dataset.emailId).filter(Boolean);
+                const label = document.getElementById('bulk-actions-label');
+                const buttons = document.querySelectorAll('#bulk-actions-bar button');
+                buttons.forEach(b => b.disabled = true);
+                label.textContent = `Processing ${ids.length} email(s)...`;
+
+                let failed = 0;
+                for (const id of ids) {
+                    try {
+                        const res = await fetch(`/api/email/${id}/${action}`, { method: 'POST' });
+                        if (!res.ok) failed++;
+                    } catch (e) {
+                        failed++;
+                    }
+                }
+
+                buttons.forEach(b => b.disabled = false);
+
+                if (failed > 0) {
+                    alert(`${failed} of ${ids.length} action(s) failed.`);
+                }
+
+                loadDigest();
+                return;
+            }
+
+            if (action === 'unsubscribe') {
+                const items = Array.from(checked).map(cb => ({
+                    id: cb.dataset.emailId,
+                    url: cb.dataset.unsubscribeUrl,
+                    oneClick: cb.dataset.oneClick === '1'
+                }));
+
+                const eligible = items.filter(i => i.url);
+                const skipped = items.length - eligible.length;
+
+                if (eligible.length === 0) {
+                    alert(`No unsubscribe link was found for the selected email(s). Either they're flagged as Phishing Risk/Suspicious (links not acted on), or the sender doesn't include a List-Unsubscribe header.`);
+                    return;
+                }
+
+                const label = document.getElementById('bulk-actions-label');
+                const buttons = document.querySelectorAll('#bulk-actions-bar button');
+                buttons.forEach(b => b.disabled = true);
+                label.textContent = `Unsubscribing from ${eligible.length} email(s)...`;
+
+                let failed = 0;
+                for (const item of eligible) {
+                    try {
+                        const res = await fetch(`/api/email/${item.id}/unsubscribe`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: item.url, one_click: item.oneClick })
+                        });
+                        if (!res.ok) failed++;
+                    } catch (e) {
+                        failed++;
+                    }
+                }
+
+                buttons.forEach(b => b.disabled = false);
+
+                let msg = `Unsubscribed from ${eligible.length - failed} email(s).`;
+                if (failed > 0) msg += ` ${failed} failed.`;
+                if (skipped > 0) msg += ` ${skipped} skipped (no unsubscribe link detected for those).`;
+                alert(msg);
+
+                loadDigest();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function analyzeLinkWithPhi4() {
+            const input = document.getElementById('link-input');
+            const resultDiv = document.getElementById('link-analysis-result');
+            const url = input.value.trim();
+
+            if (!url) {
+                resultDiv.innerHTML = '<p style="color:#d9534f;">Please enter a URL to analyze.</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Analyzing with Phi-4...</div>';
+
+            try {
+                const response = await fetch('/api/analyze-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    resultDiv.innerHTML = `<p style="color:#d9534f;">Error: ${escapeHtml(data.detail || 'Analysis failed')}</p>`;
+                    return;
+                }
+
+                let html = '';
+
+                if (data.verdict) {
+                    const v = data.verdict.trim().toUpperCase();
+                    const verdictClass = v.includes('PHISH') ? 'verdict-phishing'
+                        : v.includes('SUSPIC') ? 'verdict-suspicious'
+                        : v.includes('SAFE') ? 'verdict-safe'
+                        : 'verdict-unknown';
+
+                    html += `<div class="link-analysis-summary ${verdictClass}">
+                        <strong>Verdict: ${escapeHtml(data.verdict)}</strong>
+                        ${data.recommendation ? `<p>${escapeHtml(data.recommendation)}</p>` : ''}
+                    </div>`;
+                }
+
+                html += `<details class="link-analysis-details" open>
+                    <summary>Show full Phi-4 reasoning</summary>
+                    <div class="link-analysis-output">${escapeHtml(data.analysis)}</div>
+                </details>`;
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color:#d9534f;">Error: ${escapeHtml(error.message)}</p>`;
+            }
+        }
+
+        // Check if returning from OAuth callback
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('code')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(loadDigest, 1000);
+        }
+    </script>
+</body>
+</html>
