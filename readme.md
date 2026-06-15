@@ -101,7 +101,7 @@ cd emailscan-ai
 ### 2. Install dependencies
 
 ```bash
-pip install fastapi uvicorn requests python-dotenv pydantic
+pip install -r requirements.txt
 ```
 
 ### 3. Configure Microsoft Entra ID (Graph API)
@@ -171,7 +171,7 @@ EmailScan AI processes data locally via a trusted FastAPI proxy. Mailbox data fe
 
 ## 🎥 Demo Video
 
-[Add your YouTube or Vimeo link here]
+https://drive.google.com/file/d/1MFOU-8MIN-iQSTdIRGR4iLMWXfi6C03l/
 
 ## Author
 
